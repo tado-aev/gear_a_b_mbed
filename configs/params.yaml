@@ -1,0 +1,14 @@
+# Baud rate to communicate with Cool Muscle actuator
+cool_muscle_baudrate: 38400
+
+# Signal overlap duration when switching gears
+signal_overlap_ms: 15
+
+# Parameters for the linear line controlling the voltage for the accelerator
+#
+# The following equation is used to determine the output voltage:
+#   out_voltage = voltage_a_slope * percentage + voltage_a_intercept
+# where percentage is [0, 100]. The out_voltage is written twice onto the SPI
+# wire, which is connected to the ECU.
+ecu_voltage_a: [25.54,  746.00]
+ecu_voltage_b: [26.00, 1495.00]
