@@ -1,6 +1,7 @@
 *
 !include/
 !include/*.h
+!include/*.hpp
 !*.cpp
 !configs/
 !configs/*.yaml
