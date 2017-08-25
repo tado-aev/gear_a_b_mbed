@@ -20,8 +20,8 @@ callback(const coms_msgs::ComsGAB& msg) {
     controller.brake().set(msg.brake);
 }
 
-int
-main() {
+void
+run_node() {
     ros::NodeHandle nh;
     ros::Subscriber<coms_msgs::ComsGAB> command_sub{"cmd_gab", &callback};
 
@@ -74,6 +74,13 @@ main() {
     controller.gear().off();
     controller.accel().off();
     controller.brake().off();
+}
+
+int
+main() {
+    while (true) {
+        run_node();
+    }
 
     return 0;
 }
