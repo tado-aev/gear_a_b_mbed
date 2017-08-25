@@ -26,7 +26,7 @@ ifndef GCC4MBED_DIR
 	$(error GCC4MBED_DIR env variable must be set.)
 endif
 
-PROJECT			:= gear-a-b-mbed
+PROJECT			:= gear_a_b_mbed
 DEVICES			:= LPC1768
 GCC4MBED_DIR	:= $(GCC4MBED_DIR)
 USER_LIBS		:= include !$(ROS_LIB_DIR) $(ROS_LIB_DIR)/BufferedSerial

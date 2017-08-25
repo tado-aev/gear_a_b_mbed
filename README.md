@@ -1,4 +1,4 @@
-# gear-a-b-mbed
+# gear_a_b_mbed
 
 Gear, Accelerator, and Brake controller for mbed.
 
@@ -17,6 +17,16 @@ of hardware components connected to the EV:
   - For the accelerator control
 
 TODO: more detailed explanation about the components
+
+## Installation
+
+Run `make deploy` in the project's root directory. This will create the `.bin`
+file and copy it over to the mbed. If it doesn't automatically deploy it,
+you need to copy it over yourself.
+
+Then, copy this to you catkin workspace and run `catkin_make`. After `source
+devel/setup.bash`, you should be able to run `roslaunch gear_a_b_mbed
+coms.launch`. Change the port name accordingly.
 
 ## Author
 
