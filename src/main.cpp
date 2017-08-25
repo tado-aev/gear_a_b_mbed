@@ -65,33 +65,6 @@ main() {
     is_ready = true;
     nh.loginfo("Ready to receive messages!");
 
-    // Test brake
-    /*
-    controller.brake().set(25);
-    controller.write_to_pc(std::to_string(static_cast<int>(controller.brake().get_percentage())));
-    wait_ms(1000);
-    controller.brake().set(50);
-    controller.write_to_pc(std::to_string(static_cast<int>(controller.brake().get_percentage())));
-    wait_ms(1000);
-    controller.brake().set(100);
-    controller.write_to_pc(std::to_string(static_cast<int>(controller.brake().get_percentage())));
-    wait_ms(1000);
-    */
-
-    // Test accel
-    /*
-    controller.gear().set('d');
-    controller.accel().set(10);
-    wait_ms(3000);
-    controller.accel().set(25);
-    wait_ms(2000);
-    controller.accel().set(50);
-    wait_ms(2000);
-    controller.accel().set(100);
-    wait_ms(2000);
-    controller.accel().set(0);
-    */
-
     // Spin
     while (nh.connected()) {
         nh.spinOnce();
