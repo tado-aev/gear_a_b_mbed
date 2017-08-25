@@ -1,7 +1,7 @@
 #include "AccelController.h"
 
 /* Constructors, Destructor, and Assignment operators {{{ */
-AccelController::AccelController(PinName eanble,
+AccelController::AccelController(PinName enable,
                                  PinName mosi,
                                  PinName miso,
                                  PinName sclk,
@@ -33,7 +33,6 @@ AccelController::init() {
 void
 AccelController::on() {
     enable = 1;
-    write_to_pc("Finished on for accel");
 }
 
 void
@@ -53,7 +52,6 @@ AccelController::set(const double percentage) {
     to_ecu_dac.write(b_out);
     to_ecu_dac.write(a_out);
     to_ecu_dac_cs = 1;
-    write_to_pc("Finished set for accel");
 }
 
 void

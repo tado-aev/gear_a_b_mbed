@@ -29,7 +29,7 @@ endif
 PROJECT			:= gear-a-b-mbed
 DEVICES			:= LPC1768
 GCC4MBED_DIR	:= $(GCC4MBED_DIR)
-USER_LIBS		:= include !$(ROS_LIB_DIR) $(ROS_LIB_DIR)/BufferedSerial
+USER_LIBS		:= ../include !$(ROS_LIB_DIR) $(ROS_LIB_DIR)/BufferedSerial
 MBED_OS_ENABLE	:= 0
 NO_FLOAT_PRINTF	:= 1
 NO_FLOAT_SCANF	:= 1

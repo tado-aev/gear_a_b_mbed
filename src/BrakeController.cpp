@@ -29,6 +29,7 @@ BrakeController::init() {
      *
      * Pulse Count
      *   high <----> low
+     *   Pulse count is 0 at origin
      * Percentage
      *      0                        100
      * |----|-------------------------|
@@ -45,126 +46,149 @@ BrakeController::init() {
      * braking point and get an error for going over the torque limit. This is
      * set as 100% brake.
      */
+
+    // Send in-position status, in/out change status, disable echo
+    writeline("K23.1=", 0b01111);
+    // Direction of search (in CW direction i.e. towards back of vehicle)
+    writeline("K45.1=0");
+    // Use torque threshold for detecting origin
+    writeline("K46.1=0");
+    // Set torque limit for detecting origin
+    writeline("K47.1=150");
+
     // Enable motor
     on();
 
-    // Send in-position status, in/out change status, disable echo
-    to_cool_muscle.printf("K23.1=%d\r\n", 0b01111);
-    // Direction of search (in CW direction i.e. towards back of vehicle)
-    to_cool_muscle.printf("K45.1=0\r\n");
-    // Use torque threshold for detecting origin
-    to_cool_muscle.printf("K46.1=0\r\n");
-    // Set torque limit for detecting origin
-    to_cool_muscle.printf("K47.1=110\r\n");
-
     // Initiate origin search
-    to_cool_muscle.printf("|.1\r\n");
+    writeline("|.1");
     // Wait for origin search to complete
     pulse_t dummy;
-    readline("Origin.1=%lld\r\n", dummy);
+    // Note: %lld crashes LPC1768
+    //readline("Origin.1=%lld", dummy);
+    readline("Origin.1=%d", dummy);
     // Response should be 8
-    readline("Ux.1=%d\r\n", response_code);
+    readline("Ux.1=%d", response_code);
 
     // Move the actuator a bit towards the front
     // Position
-    to_cool_muscle.printf("P.1=%d\r\n", brake_slack_pulse_back);
+    writeline("P.1=", brake_slack_pulse_back);
     // Speed
-    to_cool_muscle.printf("S.1=%d\r\n", DEFAULT_S);
+    writeline("S.1=", DEFAULT_S);
     // Acceleration
-    to_cool_muscle.printf("A.1=%d\r\n", DEFAULT_A);
+    writeline("A.1=", DEFAULT_A);
     // Torque limit
-    to_cool_muscle.printf("M.1=%d\r\n", DEFAULT_M);
+    writeline("M.1=", DEFAULT_M);
     // Go!
-    to_cool_muscle.printf("^.1\r\n");
+    writeline("^.1");
     // Status should be 8
-    readline("Ux.1=%d\r\n", response_code);
+    readline("Ux.1=%d", response_code);
 
     // Set current position as origin
-    to_cool_muscle.printf("|2.1");
+    writeline("|2.1");
     min_cool_muscle = 0;
 
     // Now, find the pulse count at 100% brake
     // Hit the brake as far in as possible
-    to_cool_muscle.printf("P.1=-10000\r\n");
+    writeline("P.1=-10000");
     // Go! After this operation, motor is freed due to excessive torque
-    to_cool_muscle.printf("^.1\r\n");
+    writeline("^.1");
     // Response code should be 4 (torque limit)
-    // TODO: check response code
-    readline("Ux.1=%d\r\n", response_code);
+    readline("Ux.1=%d", response_code);
     max_cool_muscle = get_pulse_count();
+    max_cool_muscle += brake_slack_pulse_front;
     // Re-enable the motor
     on();
+    led_output(80);
 
     // Readjust the motor so that it's at 0% brake pedal
-    to_cool_muscle.printf("|1.1\r\n");
+    writeline("|1.1");
+    // Response code should be 8
+    readline("Ux.1=%d", response_code);
+    led_output(0);
 
     // Set soft limit (for the + side == pulling out the brake)
-    to_cool_muscle.printf("K58=%d\r\n", min_cool_muscle);
+    writeline("K58=", min_cool_muscle);
     // Set soft limit (for the - side == pushing in the brake)
-    to_cool_muscle.printf("K59=%d\r\n", max_cool_muscle);
+    writeline("K59=", max_cool_muscle);
 
     // Disable motor
     off();
-    write_to_pc("Finished init for brake");
 }
 
 void
 BrakeController::on() {
-    to_cool_muscle.printf("(.1\r\n");
-    int response_code;
-    readline("Ux.1=%d\r\n", response_code);
-    // TODO: check if response_code was 8
-    write_to_pc("Finished on for brake");
+    int response_code = RESPONSE_MOTOR_OFF;
+    while (response_code != RESPONSE_OK) {
+        writeline("(.1");
+        readline("Ux.1=%d", response_code);
+    }
 }
 
 void
 BrakeController::off() {
-    to_cool_muscle.printf(").1\r\n");
+    writeline(").1");
 }
 
 void
 BrakeController::set(const double percentage) {
+    int response_code = get_status();
+
+    if (response_code == RESPONSE_MOTOR_OFF) {
+        on();
+    }
+
     pulse_t diff = max_cool_muscle - min_cool_muscle;
-    pulse_t pulse = min_cool_muscle + static_cast<pulse_t>(diff * percentage);
-    to_cool_muscle.printf("P.1=%lld\r\n", pulse);
-    to_cool_muscle.printf("S.1=%d\r\n", DEFAULT_S);
-    to_cool_muscle.printf("A.1=%d\r\n", DEFAULT_A);
-    to_cool_muscle.printf("M.1=%d\r\n", DEFAULT_M);
-    to_cool_muscle.printf("^.1\r\n");
-    int response_code;
-    readline("Ux.1=%d\r\n", response_code);
-    write_to_pc("Finished set for brake");
+    pulse_t offset = static_cast<pulse_t>(diff * percentage / 100);
+    pulse_t pulse = min_cool_muscle + offset;
+    writeline("P.1=", pulse);
+    writeline("S.1=", DEFAULT_S);
+    writeline("A.1=", DEFAULT_A);
+    writeline("M.1=", DEFAULT_M);
+    writeline("^.1");
+    readline("Ux.1=%d", response_code);
 }
 
 void
 BrakeController::emergency() {
-    to_cool_muscle.printf("*\r\n");
+    writeline("*");
 }
 
 void
 BrakeController::release_emergency() {
-    to_cool_muscle.printf("*1\r\n");
+    writeline("*1");
 }
 
 pulse_t
 BrakeController::get_pulse_count() {
-    to_cool_muscle.printf("?96.1\r\n");
+    writeline("?96.1");
     pulse_t pulse;
-    readline("Px.1=%lld\r\n", pulse);
+    readline("Px.1=%d", pulse);
+    // Note: %lld crashes LPC1768
+    //readline("Px.1=%lld", pulse);
     return pulse;
 }
 
 double
 BrakeController::get_percentage() {
-    int pulse = get_pulse_count();
-    return static_cast<double>(pulse) / (brake_slack_pulse_back - brake_slack_pulse_front);
+    pulse_t pulse = get_pulse_count();
+    pulse_t diff = max_cool_muscle - min_cool_muscle;
+    return static_cast<double>(100 * pulse) / diff;
 }
 
 double
 BrakeController::get_percentage_potentiometer() {
     unsigned short raw_val = potentiometer.read_u16();
     int diff = max_potentiometer - min_potentiometer;
-    return static_cast<double>(raw_val - min_potentiometer) / diff;
+    double p = static_cast<double>(raw_val - min_potentiometer) / diff;
+    return p * 100;
+}
+
+int
+BrakeController::get_status() {
+    int response_code;
+    writeline("?99.1");
+    readline("Ux.1=%d", response_code);
+    return response_code;
 }
 
 void
@@ -172,25 +196,44 @@ BrakeController::set_cool_muscle_baudrate(const unsigned baudrate) {
     to_cool_muscle.baud(baudrate);
 }
 
-std::string
-BrakeController::readline(const std::string& fmt /* = "%s" */) {
-    char buf[512];
-    auto populated = to_cool_muscle.scanf(fmt.c_str(), buf);
-    if (populated == 0) {
-        return "";
-    }
-
-    return std::string{buf};
+void
+BrakeController::writeline(const std::string& line) {
+    to_cool_muscle.printf("%s\r\n", line.c_str());
 }
 
 template<typename T>
 void
-BrakeController::readline(const std::string& fmt, T& var) {
-    // Read a line, and then parse it
-    char buf[512];
-    to_cool_muscle.scanf("%s", buf);
+BrakeController::writeline(const std::string& line, const T var) {
+    writeline(line + std::to_string(var));
+}
+
+template<typename T>
+void
+BrakeController::readline(const std::string& fmt,
+                          T& var,
+                          const bool allow_empty /* = false */) {
     int populated = 0;
     while (populated == 0) {
-        populated = sscanf(buf, fmt.c_str(), &var);
+        std::string line = "";
+
+        while (line.empty()) {
+            char buf[512];
+            to_cool_muscle.scanf("%s", buf);
+            line = std::string{buf};
+
+            if (allow_empty) {
+                break;
+            }
+        }
+
+        while (line.back() == '\r' || line.back() == '\n') {
+            line.pop_back();
+        }
+
+        populated = sscanf(line.c_str(), fmt.c_str(), &var);
+
+        if (allow_empty) {
+            return;
+        }
     }
 }

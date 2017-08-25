@@ -58,6 +58,7 @@ GearController::on() {
 
 void
 GearController::off() {
+    set_n();
     mode_manual();
 }
 

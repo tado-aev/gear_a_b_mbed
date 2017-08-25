@@ -10,7 +10,21 @@
 
 class BrakeController : public BaseController {
 public:
-    using pulse_t = long long int;
+    /* Note: LPC1768 (or Serial::scanf) doesn't support long long int? */
+    //using pulse_t = long long int;
+    using pulse_t = int;
+
+    static const int RESPONSE_MOVING = 0;
+    static const int RESPONSE_OVERFLOW = 1;
+    static const int RESPONSE_OVERSPEED = 2;
+    static const int RESPONSE_TORQUE_LIMIT = 4;
+    static const int RESPONSE_OK = 8;
+    static const int RESPONSE_MOTOR_OFF = 16;
+    static const int RESPONSE_PRESSING = 32;
+    static const int RESPONSE_PRESS_COMPLETE = 64;
+    static const int RESPONSE_TEMPERATURE_ERROR = 128;
+    static const int RESPONSE_PRESS_ERROR = 256;
+    static const int RESPONSE_EMERGENCY = 512;
 
     // Default speed for Cool Muscle
     static const int DEFAULT_S = 10;
@@ -100,6 +114,12 @@ public:
     get_percentage_potentiometer();
 
     /**
+     * Returns the motor status
+     */
+    int
+    get_status();
+
+    /**
      * Sets the baud rate for the Cool Muscle actuator
      */
     void
@@ -126,16 +146,20 @@ private:
     unsigned short max_potentiometer;
 
     /**
-     * Reads one line from the cool muscle
-     *
-     * Note that a line cannot be longer than 511 characters long.
-     *
-     * \param[in] fmt format of the line. Same as what you give to scanf
-     *
-     * \return the line read
+     * Writes a line to the Cool Muscle actuator after adding a CRLF
      */
-    std::string
-    readline(const std::string& fmt = "%s");
+    void
+    writeline(const std::string& line);
+
+    /**
+     * Writes a line to the Cool Muscle actuator after adding a CRLF
+     *
+     * The second parameter is concatenated to the first parameter.
+     * The string written is in the following format: "{line}{var}\r\n"
+     */
+    template<typename T>
+    void
+    writeline(const std::string& line, const T var);
 
     /**
      * Reads one line from the cool muscle
@@ -147,11 +171,12 @@ private:
      *
      * \param[in] var variable to be populated
      *
-     * \return true if var was populated, false otherwise
+     * \param[in] allow_empty true if the format doesn't have to match the
+     *                        line read. If true, exactly one line is read
      */
     template<typename T>
     void
-    readline(const std::string& fmt, T& var);
+    readline(const std::string& fmt, T& var, const bool allow_empty = false);
 };
 
 #endif /* end of include guard */

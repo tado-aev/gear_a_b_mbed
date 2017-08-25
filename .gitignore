@@ -1,10 +1,13 @@
 *
 !include/
-!include/*.h
-!include/*.hpp
+!src/
+!*.h
+!*.hpp
 !*.cpp
 !configs/
-!configs/*.yaml
+!*.yaml
 !README.*
 !Makefile
+!CMakeLists.txt
+!package.xml
 !.gitignore

@@ -41,6 +41,9 @@ public:
     void
     write_to_pc(const std::string& msg);
 
+    Serial&
+    pc();
+
     /**
      * Changes the on-board LEDs to the given bitwise high/low
      */
@@ -93,7 +96,12 @@ BaseController::~BaseController()
 
 void
 BaseController::write_to_pc(const std::string& msg) {
-    to_pc.printf("%s\n", msg.c_str());
+    to_pc.printf("%s\r\n", msg.c_str());
+}
+
+Serial&
+BaseController::pc() {
+    return to_pc;
 }
 
 void
