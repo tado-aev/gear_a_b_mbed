@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+  <node pkg="rosserial_python" type="serial_node.py" name="rosserial" output="screen">
+    <rosparam command="load" file="$(find gear_a_b_mbed)/configs/params.yaml" />
+  </node>
+</launch>

@@ -1,11 +1,13 @@
 *
 !include/
 !src/
+!configs/
+!launch/
 !*.h
 !*.hpp
 !*.cpp
-!configs/
 !*.yaml
+!*.launch
 !README.*
 !Makefile
 !CMakeLists.txt

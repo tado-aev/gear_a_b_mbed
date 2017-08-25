@@ -1,3 +1,5 @@
+port: /dev/ttyACM0
+baud: 57600
 # Baud rate to communicate with Cool Muscle actuator
 cool_muscle_baudrate: 38400
 
