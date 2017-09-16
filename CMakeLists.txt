@@ -17,15 +17,13 @@ find_package(catkin REQUIRED COMPONENTS
     coms_msgs
     )
 
-find_package(Boost REQUIRED COMPONENTS system)
-
 catkin_package(
     INCLUDE_DIRS include
     LIBRARIES gear_a_b_mbed
     CATKIN_DEPENDS rosserial_mbed coms_msgs
     )
 
-add_custom_target(gear_a_b_mbed
+add_custom_target(gear_a_b_mbed.bin ALL
     COMMAND make deploy
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
