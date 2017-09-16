@@ -54,6 +54,11 @@ AccelController::set(const double percentage) {
     to_ecu_dac_cs = 1;
 }
 
+double
+AccelController::get_percentage() {
+    return current_percentage;
+}
+
 void
 AccelController::set_ecu_dac_slope_intercept(const float voltage_a_slope,
                                              const float voltage_a_intercept,

@@ -52,6 +52,9 @@ public:
     void
     set(const double percentage);
 
+    double
+    get_percentage();
+
     /**
      * Sets the parameters for calculating values to write to the DAC
      */

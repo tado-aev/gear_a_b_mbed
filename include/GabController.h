@@ -9,6 +9,9 @@
 
 #include <mbed.h>
 
+#include <ros.h>
+#include <coms_msgs/ComsStatus.h>
+
 /**
  * Class for controlling the gear, accelerator, and the brake.
  */
@@ -59,10 +62,30 @@ public:
         return gear_controller;
     }
 
+    Thread&
+    begin_publishing(ros::NodeHandle& nh, const float hz);
+
+    void
+    end_publishing();
+
+    void
+    publish_status();
+
 private:
     GearController gear_controller;
     AccelController accel_controller;
     BrakeController brake_controller;
+
+    unsigned seq;
+    bool stop_publishing;
+    float status_rate;
+    ros::NodeHandle nh;
+    coms_msgs::ComsStatus status_msg;
+    ros::Publisher status_pub;
+    Thread publisher_thread;
+
+    void
+    keep_publishing();
 };
 
 #endif /* end of include guard */
