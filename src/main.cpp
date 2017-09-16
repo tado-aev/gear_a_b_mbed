@@ -26,9 +26,12 @@ void
 run_node() {
     ros::NodeHandle nh;
     ros::Subscriber<coms_msgs::ComsGAB> command_sub{"cmd_gab", &callback};
+    coms_msgs::ComsStatus status_msg;
+    auto status_pub = ros::Publisher{"coms_status", &status_msg};
 
     nh.initNode();
     nh.subscribe(command_sub);
+    nh.advertise(status_pub);
 
     while (!nh.connected()) {
        nh.spinOnce();
@@ -66,7 +69,12 @@ run_node() {
     controller.brake().on();
 
     nh.loginfo("Publishing status");
-    controller.begin_publishing(nh, status_rate);
+    Thread publisher_thread;
+    controller.begin_publishing(&nh,
+                                &status_pub,
+                                &status_msg,
+                                status_rate,
+                                publisher_thread);
 
     // We're ready to control!
     is_ready = true;
@@ -78,13 +86,13 @@ run_node() {
         wait_ms(1);
     }
 
-    nh.loginfo("Stopping status publish");
     controller.end_publishing();
 
-    nh.loginfo("Turning devices off");
     controller.gear().off();
     controller.accel().off();
     controller.brake().off();
+
+    is_ready = false;
 }
 
 int

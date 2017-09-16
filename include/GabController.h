@@ -62,8 +62,12 @@ public:
         return gear_controller;
     }
 
-    Thread&
-    begin_publishing(ros::NodeHandle& nh, const float hz);
+    void
+    begin_publishing(ros::NodeHandle* nh,
+                     ros::Publisher* status_pub,
+                     coms_msgs::ComsStatus* status_msg,
+                     const float hz,
+                     Thread& publisher_thread);
 
     void
     end_publishing();
@@ -79,10 +83,9 @@ private:
     unsigned seq;
     bool stop_publishing;
     float status_rate;
-    ros::NodeHandle nh;
-    coms_msgs::ComsStatus status_msg;
-    ros::Publisher status_pub;
-    Thread publisher_thread;
+    ros::NodeHandle* nh;
+    ros::Publisher* status_pub;
+    coms_msgs::ComsStatus* status_msg;
 
     void
     keep_publishing();
