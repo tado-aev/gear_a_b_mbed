@@ -52,6 +52,8 @@ AccelController::set(const double percentage) {
     to_ecu_dac.write(b_out);
     to_ecu_dac.write(a_out);
     to_ecu_dac_cs = 1;
+
+    current_percentage = percentage;
 }
 
 double

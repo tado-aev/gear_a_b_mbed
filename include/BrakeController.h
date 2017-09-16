@@ -105,6 +105,12 @@ public:
     get_percentage();
 
     /**
+     * Returns the current voltage from the potentiometer
+     */
+    double
+    get_potentiometer_value();
+
+    /**
      * Returns the current percentage of the potentiometer
      *
      * Uses the potentiometer to calculate how much the brake pedal is being
@@ -141,9 +147,9 @@ private:
     pulse_t max_cool_muscle;
 
     // Value from the potentiometer at 0% brake
-    unsigned short min_potentiometer;
+    double min_potentiometer;
     // Value from the potentiometer at 100% brake
-    unsigned short max_potentiometer;
+    double max_potentiometer;
 
     /**
      * Writes a line to the Cool Muscle actuator after adding a CRLF

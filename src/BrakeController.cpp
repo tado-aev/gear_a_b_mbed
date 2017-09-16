@@ -85,7 +85,8 @@ BrakeController::init() {
 
     // Set current position as origin
     writeline("|2.1");
-    min_cool_muscle = 0;
+    min_cool_muscle = get_pulse_count();
+    min_potentiometer = get_potentiometer_value();
 
     // Now, find the pulse count at 100% brake
     // Hit the brake as far in as possible
@@ -98,6 +99,7 @@ BrakeController::init() {
     max_cool_muscle += brake_slack_pulse_front;
     // Re-enable the motor
     on();
+    max_potentiometer = get_potentiometer_value();
     led_output(80);
 
     // Readjust the motor so that it's at 0% brake pedal
@@ -172,15 +174,19 @@ double
 BrakeController::get_percentage() {
     pulse_t pulse = get_pulse_count();
     pulse_t diff = max_cool_muscle - min_cool_muscle;
-    return static_cast<double>(100 * pulse) / diff;
+    return 100 * static_cast<double>(pulse - min_cool_muscle) / diff;
+}
+
+double
+BrakeController::get_potentiometer_value() {
+    return static_cast<double>(potentiometer);
 }
 
 double
 BrakeController::get_percentage_potentiometer() {
-    unsigned short raw_val = potentiometer.read_u16();
-    int diff = max_potentiometer - min_potentiometer;
-    double p = static_cast<double>(raw_val - min_potentiometer) / diff;
-    return p * 100;
+    double raw_val = get_potentiometer_value();
+    auto diff = max_potentiometer - min_potentiometer;
+    return 100 * (raw_val - min_potentiometer) / diff;
 }
 
 int
