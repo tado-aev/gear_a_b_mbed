@@ -41,7 +41,7 @@ GabController::end_publishing() {
 
 void
 GabController::publish_status() {
-    status_msg.header.stamp = ros::Time::now();
+    status_msg.header.stamp = nh.now();
     status_msg.header.seq = seq++;
     status_msg.header.frame_id = "0";
     switch (gear_controller.get_gear()) {
