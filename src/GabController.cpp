@@ -56,6 +56,8 @@ GabController::publish_status() {
     status_msg->header.stamp = nh->now();
     status_msg->header.seq = seq++;
     status_msg->header.frame_id = "0";
+    // TODO: Read from main.cpp
+    status_msg->gab.program_mode = false;
     switch (gear_controller.get_gear()) {
         case GearController::REVERSE:
             status_msg->gab.gear = "r";

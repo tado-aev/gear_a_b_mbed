@@ -7,19 +7,77 @@
 
 #include "GabController.h"
 
-bool is_ready = false;
+static constexpr double BRAKE_FOLLOWER_RATE = 20;
+// Offset from the potentiometer to the actual brake percentage
+static constexpr double BRAKE_FOLLOWER_OFFSET = -10;
+
+bool is_g_a_turned_on = false;
+
+bool program_mode = false;
+Mutex program_mode_mutex;
 
 GabController controller;
 
 void
-callback(const coms_msgs::ComsGAB& msg) {
-    if (!is_ready) {
-        return;
+gear_accelerator_on() {
+    ros::NodeHandle nh;
+    nh.loginfo("Turning gear and accelerator ON");
+    controller.gear().on();
+    controller.accel().on();
+
+    is_g_a_turned_on = true;
+}
+
+void
+gear_accelerator_off() {
+    controller.gear().off();
+    controller.accel().off();
+
+    is_g_a_turned_on = false;
+}
+
+void
+brake_follower() {
+    ros::NodeHandle nh;
+
+    controller.brake().on();
+
+    while (nh.connected()) {
+        wait_ms(1000.0 / BRAKE_FOLLOWER_RATE);
+
+        program_mode_mutex.lock();
+        auto program_mode_flag = program_mode;
+        program_mode_mutex.unlock();
+        if (program_mode_flag) {
+            continue;
+        }
+
+        auto potentiometer = controller.brake().get_percentage_potentiometer();
+        controller.brake().set(potentiometer + BRAKE_FOLLOWER_OFFSET);
     }
 
-    controller.gear().set(msg.gear);
-    controller.accel().set(msg.accel);
-    controller.brake().set(msg.brake);
+    controller.brake().off();
+}
+
+void
+callback(const coms_msgs::ComsGAB& msg) {
+    program_mode_mutex.lock();
+    program_mode = msg.program_mode;
+    program_mode_mutex.unlock();
+
+    if (msg.program_mode) {
+        if (!is_g_a_turned_on) {
+            gear_accelerator_on();
+        }
+
+        controller.gear().set(msg.gear);
+        controller.accel().set(msg.accel);
+        controller.brake().set(msg.brake);
+    }
+    else if (is_g_a_turned_on) {
+        // Brake following mode
+        gear_accelerator_off();
+    }
 }
 
 void
@@ -63,10 +121,10 @@ run_node() {
     controller.accel().init();
     controller.brake().init();
 
-    nh.loginfo("Turning gear, accelerator, and brake ON");
-    controller.gear().on();
-    controller.accel().on();
-    controller.brake().on();
+    // Brake-following when ComsGAB::program_mode is false
+    // Brake is turned on in brake_follower
+    Thread brake_follower_thread;
+    brake_follower_thread.start(brake_follower);
 
     nh.loginfo("Publishing status");
     Thread publisher_thread;
@@ -77,7 +135,6 @@ run_node() {
                                 publisher_thread);
 
     // We're ready to control!
-    is_ready = true;
     nh.loginfo("Ready to receive messages!");
 
     // Spin
@@ -88,11 +145,10 @@ run_node() {
 
     controller.end_publishing();
 
-    controller.gear().off();
-    controller.accel().off();
-    controller.brake().off();
+    gear_accelerator_off();
+    // Brake is turned off in brake_follower
 
-    is_ready = false;
+    program_mode = false;
 }
 
 int
