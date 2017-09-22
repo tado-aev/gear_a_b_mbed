@@ -18,9 +18,10 @@ Mutex program_mode_mutex;
 
 GabController controller;
 
+ros::NodeHandle nh;
+
 void
 gear_accelerator_on() {
-    ros::NodeHandle nh;
     nh.loginfo("Turning gear and accelerator ON");
     controller.gear().on();
     controller.accel().on();
@@ -38,8 +39,6 @@ gear_accelerator_off() {
 
 void
 brake_follower() {
-    ros::NodeHandle nh;
-
     controller.brake().on();
 
     while (nh.connected()) {
@@ -82,7 +81,6 @@ callback(const coms_msgs::ComsGAB& msg) {
 
 void
 run_node() {
-    ros::NodeHandle nh;
     ros::Subscriber<coms_msgs::ComsGAB> command_sub{"cmd_gab", &callback};
     coms_msgs::ComsStatus status_msg;
     auto status_pub = ros::Publisher{"coms_status", &status_msg};
