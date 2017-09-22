@@ -9,7 +9,7 @@
 
 static constexpr double BRAKE_FOLLOWER_RATE = 20;
 // Offset from the potentiometer to the actual brake percentage
-static constexpr double BRAKE_FOLLOWER_OFFSET = -10;
+static constexpr double BRAKE_FOLLOWER_OFFSET = -35;
 
 bool is_g_a_turned_on = false;
 
