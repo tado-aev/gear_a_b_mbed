@@ -14,26 +14,23 @@ static constexpr double BRAKE_FOLLOWER_OFFSET = -10;
 bool is_g_a_turned_on = false;
 
 bool program_mode = false;
-Mutex program_mode_mutex;
 
 GabController controller;
 
 void
-gear_accelerator_on() {
+turn_on() {
     ros::NodeHandle nh;
-    nh.loginfo("Turning gear and accelerator ON");
+    nh.loginfo("Turning gearr, accelerator, and brake ON");
     controller.gear().on();
     controller.accel().on();
-
-    is_g_a_turned_on = true;
+    controller.brake().on();
 }
 
 void
-gear_accelerator_off() {
+turn_off() {
     controller.gear().off();
     controller.accel().off();
-
-    is_g_a_turned_on = false;
+    controller.brake().off();
 }
 
 void
@@ -45,13 +42,6 @@ brake_follower() {
     while (nh.connected()) {
         wait_ms(1000.0 / BRAKE_FOLLOWER_RATE);
 
-        program_mode_mutex.lock();
-        auto program_mode_flag = program_mode;
-        program_mode_mutex.unlock();
-        if (program_mode_flag) {
-            continue;
-        }
-
         auto potentiometer = controller.brake().get_percentage_potentiometer();
         controller.brake().set(potentiometer + BRAKE_FOLLOWER_OFFSET);
     }
@@ -61,23 +51,13 @@ brake_follower() {
 
 void
 callback(const coms_msgs::ComsGAB& msg) {
-    program_mode_mutex.lock();
-    program_mode = msg.program_mode;
-    program_mode_mutex.unlock();
-
-    if (msg.program_mode) {
-        if (!is_g_a_turned_on) {
-            gear_accelerator_on();
-        }
-
-        controller.gear().set(msg.gear);
-        controller.accel().set(msg.accel);
-        controller.brake().set(msg.brake);
+    if (!program_mode) {
+        return;
     }
-    else if (is_g_a_turned_on) {
-        // Brake following mode
-        gear_accelerator_off();
-    }
+
+    controller.gear().set(msg.gear);
+    controller.accel().set(msg.accel);
+    controller.brake().set(msg.brake);
 }
 
 void
@@ -98,11 +78,15 @@ run_node() {
 
     //// Get parameters
     nh.loginfo("Getting parameters");
+    bool use_brake_follower;
+    int use_brake_follower_int;
     int cool_muscle_baudrate;
     int signal_overlap_ms;
     float ecu_voltage_a[2];
     float ecu_voltage_b[2];
     float status_rate;
+    nh.getParam("~use_brake_follower", &use_brake_follower_int);
+    use_brake_follower = use_brake_follower_int == 1;
     nh.getParam("~cool_muscle_baudrate", &cool_muscle_baudrate);
     nh.getParam("~signal_overlap_ms", &signal_overlap_ms);
     nh.getParam("~ecu_voltage_a", ecu_voltage_a, 2);
@@ -121,10 +105,16 @@ run_node() {
     controller.accel().init();
     controller.brake().init();
 
-    // Brake-following when ComsGAB::program_mode is false
-    // Brake is turned on in brake_follower
-    Thread brake_follower_thread;
-    brake_follower_thread.start(brake_follower);
+    if (use_brake_follower) {
+        program_mode = false;
+        // Blocks
+        brake_follower();
+        return;
+    }
+
+    program_mode = true;
+
+    turn_on();
 
     nh.loginfo("Publishing status");
     Thread publisher_thread;
@@ -145,10 +135,7 @@ run_node() {
 
     controller.end_publishing();
 
-    gear_accelerator_off();
-    // Brake is turned off in brake_follower
-
-    program_mode = false;
+    turn_off();
 }
 
 int
