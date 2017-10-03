@@ -7,7 +7,7 @@
 
 static constexpr double BRAKE_FOLLOWER_RATE = 20;
 // Offset from the potentiometer to the actual brake percentage
-static constexpr double BRAKE_FOLLOWER_OFFSET = -10;
+static constexpr double BRAKE_FOLLOWER_OFFSET = -35;
 
 bool is_g_a_turned_on = false;
 
@@ -15,10 +15,12 @@ bool program_mode = false;
 
 GabController controller;
 
+ros::NodeHandle nh;
+
 void
 turn_on() {
-    ros::NodeHandle nh;
     nh.loginfo("Turning gearr, accelerator, and brake ON");
+
     controller.gear().on();
     controller.accel().on();
     controller.brake().on();
@@ -33,8 +35,6 @@ turn_off() {
 
 void
 brake_follower() {
-    ros::NodeHandle nh;
-
     controller.brake().on();
 
     while (nh.connected()) {
@@ -60,7 +60,6 @@ callback(const coms_msgs::ComsGAB& msg) {
 
 void
 run_node() {
-    ros::NodeHandle nh;
     ros::Subscriber<coms_msgs::ComsGAB> command_sub{"cmd_gab", &callback};
     coms_msgs::ComsStatus status_msg;
     auto status_pub = ros::Publisher{"coms_status", &status_msg};

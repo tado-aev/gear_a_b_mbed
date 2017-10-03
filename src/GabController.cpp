@@ -79,6 +79,10 @@ GabController::publish_status() {
 
 void
 GabController::keep_publishing() {
+    if (status_rate == 0) {
+        return;
+    }
+
     while (nh->connected() && !stop_publishing) {
         publish_status();
         wait_ms(1000 / status_rate);

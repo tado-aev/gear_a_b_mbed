@@ -17,4 +17,6 @@ signal_overlap_ms: 15
 ecu_voltage_a: [25.54,  746.00]
 ecu_voltage_b: [26.00, 1495.00]
 # Rate (hz) to publish the status such as brake percentage, potentiometer
-status_rate: 5.0
+# Set to 0 to disable
+# Note: If too fast, may overflow the serial port.
+status_rate: 0.0
