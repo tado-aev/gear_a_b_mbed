@@ -7,13 +7,51 @@
 
 #include "GabController.h"
 
-bool is_ready = false;
+static constexpr double BRAKE_FOLLOWER_RATE = 20;
+// Offset from the potentiometer to the actual brake percentage
+static constexpr double BRAKE_FOLLOWER_OFFSET = -10;
+
+bool is_g_a_turned_on = false;
+
+bool program_mode = false;
 
 GabController controller;
 
 void
+turn_on() {
+    ros::NodeHandle nh;
+    nh.loginfo("Turning gearr, accelerator, and brake ON");
+    controller.gear().on();
+    controller.accel().on();
+    controller.brake().on();
+}
+
+void
+turn_off() {
+    controller.gear().off();
+    controller.accel().off();
+    controller.brake().off();
+}
+
+void
+brake_follower() {
+    ros::NodeHandle nh;
+
+    controller.brake().on();
+
+    while (nh.connected()) {
+        wait_ms(1000.0 / BRAKE_FOLLOWER_RATE);
+
+        auto potentiometer = controller.brake().get_percentage_potentiometer();
+        controller.brake().set(potentiometer + BRAKE_FOLLOWER_OFFSET);
+    }
+
+    controller.brake().off();
+}
+
+void
 callback(const coms_msgs::ComsGAB& msg) {
-    if (!is_ready) {
+    if (!program_mode) {
         return;
     }
 
@@ -40,11 +78,15 @@ run_node() {
 
     //// Get parameters
     nh.loginfo("Getting parameters");
+    bool use_brake_follower;
+    int use_brake_follower_int;
     int cool_muscle_baudrate;
     int signal_overlap_ms;
     float ecu_voltage_a[2];
     float ecu_voltage_b[2];
     float status_rate;
+    nh.getParam("~use_brake_follower", &use_brake_follower_int);
+    use_brake_follower = use_brake_follower_int == 1;
     nh.getParam("~cool_muscle_baudrate", &cool_muscle_baudrate);
     nh.getParam("~signal_overlap_ms", &signal_overlap_ms);
     nh.getParam("~ecu_voltage_a", ecu_voltage_a, 2);
@@ -63,10 +105,16 @@ run_node() {
     controller.accel().init();
     controller.brake().init();
 
-    nh.loginfo("Turning gear, accelerator, and brake ON");
-    controller.gear().on();
-    controller.accel().on();
-    controller.brake().on();
+    if (use_brake_follower) {
+        program_mode = false;
+        // Blocks
+        brake_follower();
+        return;
+    }
+
+    program_mode = true;
+
+    turn_on();
 
     nh.loginfo("Publishing status");
     Thread publisher_thread;
@@ -77,7 +125,6 @@ run_node() {
                                 publisher_thread);
 
     // We're ready to control!
-    is_ready = true;
     nh.loginfo("Ready to receive messages!");
 
     // Spin
@@ -88,11 +135,7 @@ run_node() {
 
     controller.end_publishing();
 
-    controller.gear().off();
-    controller.accel().off();
-    controller.brake().off();
-
-    is_ready = false;
+    turn_off();
 }
 
 int
