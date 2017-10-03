@@ -20,7 +20,10 @@ GearController::GearController(PinName mode_shift_program,
 
 // Move constructor
 GearController::GearController(GearController&& other)
-    : mode_shift_program{std::move(other.mode_shift_program)}
+    : com_mutex{std::move(other.com_mutex)}
+    , current_mode{std::move(other.current_mode)}
+    , current_gear{std::move(other.current_gear)}
+    , mode_shift_program{std::move(other.mode_shift_program)}
     , mode_shift_manual{std::move(other.mode_shift_manual)}
     , shift_r{std::move(other.shift_r)}
     , shift_n{std::move(other.shift_n)}
@@ -36,6 +39,9 @@ GearController::~GearController()
 // Move assignment operator
 GearController&
 GearController::operator=(GearController&& other) {
+    com_mutex = std::move(other.com_mutex);
+    current_mode = std::move(other.current_mode);
+    current_gear = std::move(other.current_gear);
     mode_shift_program = std::move(other.mode_shift_program);
     mode_shift_manual = std::move(mode_shift_manual);
     shift_r = std::move(shift_r);
@@ -73,9 +79,11 @@ GearController::mode_program() {
 
 void
 GearController::mode_manual() {
+    com_mutex.lock();
     mode_shift_manual = 1;
     wait_ms(MODE_SWITCH_PULSE_MS);
     mode_shift_manual = 0;
+    com_mutex.unlock();
 
     current_mode = ControlMode::MANUAL;
 }
@@ -113,27 +121,33 @@ GearController::set(const char g) {
 
 void
 GearController::set_r() {
+    com_mutex.lock();
     shift_r = 1;
     shift_n = 0;
     shift_d = 0;
+    com_mutex.unlock();
 
     current_gear = Gear::REVERSE;
 }
 
 void
 GearController::set_n() {
+    com_mutex.lock();
     shift_r = 0;
     shift_n = 1;
     shift_d = 0;
+    com_mutex.unlock();
 
     current_gear = Gear::NEUTRAL;
 }
 
 void
 GearController::set_d() {
+    com_mutex.lock();
     shift_r = 0;
     shift_n = 0;
     shift_d = 1;
+    com_mutex.unlock();
 
     current_gear = Gear::DRIVE;
 }

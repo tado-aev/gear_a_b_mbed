@@ -179,7 +179,10 @@ BrakeController::get_percentage() {
 
 double
 BrakeController::get_potentiometer_value() {
-    return static_cast<double>(potentiometer);
+    potentiometer_mutex.lock();
+    auto val = static_cast<double>(potentiometer);
+    potentiometer_mutex.unlock();
+    return val;
 }
 
 double
@@ -199,12 +202,16 @@ BrakeController::get_status() {
 
 void
 BrakeController::set_cool_muscle_baudrate(const unsigned baudrate) {
+    serial_mutex.lock();
     to_cool_muscle.baud(baudrate);
+    serial_mutex.unlock();
 }
 
 void
 BrakeController::writeline(const std::string& line) {
+    serial_mutex.lock();
     to_cool_muscle.printf("%s\r\n", line.c_str());
+    serial_mutex.unlock();
 }
 
 template<typename T>
@@ -224,7 +231,9 @@ BrakeController::readline(const std::string& fmt,
 
         while (line.empty()) {
             char buf[512];
+            serial_mutex.lock();
             to_cool_muscle.scanf("%s", buf);
+            serial_mutex.unlock();
             line = std::string{buf};
 
             if (allow_empty) {

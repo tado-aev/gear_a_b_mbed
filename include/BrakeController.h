@@ -132,6 +132,9 @@ public:
     set_cool_muscle_baudrate(const unsigned baudrate);
 
 private:
+    Mutex serial_mutex;
+    Mutex potentiometer_mutex;
+
     // Cool Muscle actuator for braking
     Serial to_cool_muscle;
     AnalogIn potentiometer;

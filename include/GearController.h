@@ -121,6 +121,8 @@ public:
     set_signal_overlap(const unsigned overlap_duration_ms);
 
 private:
+    Mutex com_mutex;
+
     ControlMode current_mode;
     Gear current_gear;
 

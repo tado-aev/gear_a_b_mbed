@@ -65,6 +65,8 @@ public:
                                 const float voltage_b_intercept);
 
 private:
+    Mutex com_mutex;
+
     // Enable accelerator control
     DigitalOut enable;
     // DAC that commands voltage to the ECU
