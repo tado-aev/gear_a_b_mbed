@@ -28,6 +28,10 @@ GabController::begin_publishing(ros::NodeHandle* nh,
                                 coms_msgs::ComsStatus* status_msg,
                                 const float hz,
                                 Thread& publisher_thread) {
+    if (hz == 0) {
+        return;
+    }
+
     this->nh = nh;
     status_rate = hz;
     this->status_pub = status_pub;
@@ -79,10 +83,6 @@ GabController::publish_status() {
 
 void
 GabController::keep_publishing() {
-    if (status_rate == 0) {
-        return;
-    }
-
     while (nh->connected() && !stop_publishing) {
         publish_status();
         wait_ms(1000 / status_rate);

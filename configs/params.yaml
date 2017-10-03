@@ -1,7 +1,7 @@
 port: /dev/ttyACM1
 baud: 57600
 # Actuator automatically follows the brake (1: true, 0: false)
-use_brake_follower: 1
+use_brake_follower: 0
 # Baud rate to communicate with Cool Muscle actuator
 cool_muscle_baudrate: 38400
 
