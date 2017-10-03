@@ -2,7 +2,7 @@
 
 using pulse_t = BrakeController::pulse_t;
 
-/* Constructors, Destructor, and Assignment operators {{{ */
+/* Constructors and Destructor {{{ */
 BrakeController::BrakeController(PinName tx,
                                  PinName rx,
                                  PinName potentiometer)

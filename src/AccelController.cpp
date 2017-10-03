@@ -1,6 +1,6 @@
 #include "AccelController.h"
 
-/* Constructors, Destructor, and Assignment operators {{{ */
+/* Constructors and Destructor {{{ */
 AccelController::AccelController(PinName enable,
                                  PinName mosi,
                                  PinName miso,

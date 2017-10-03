@@ -3,8 +3,6 @@
 #include <ros.h>
 #include <coms_msgs/ComsGAB.h>
 
-#include <thread>
-
 #include "GabController.h"
 
 static constexpr double BRAKE_FOLLOWER_RATE = 20;
