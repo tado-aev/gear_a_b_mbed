@@ -55,6 +55,8 @@ BrakeController::init() {
     writeline("K46.1=0");
     // Set torque limit for detecting origin
     writeline("K47.1=150");
+    // Motor free when powered on
+    writeline("K68.1=0");
 
     // Enable motor
     on();
