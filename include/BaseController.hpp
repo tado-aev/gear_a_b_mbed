@@ -36,15 +36,6 @@ public:
     /* }}} */
 
     /**
-     * Writes to the serial port connected to the USB port
-     */
-    void
-    write_to_pc(const std::string& msg);
-
-    Serial&
-    pc();
-
-    /**
      * Changes the on-board LEDs to the given bitwise high/low
      */
     void
@@ -75,7 +66,6 @@ public:
 private:
     // On-board LEDs
     std::vector<DigitalOut> leds;
-    Serial to_pc;
 };
 
 /* Constructors, Destructor, and Assignment operators {{{ */
@@ -83,9 +73,7 @@ private:
 BaseController::BaseController()
     // On-board LEDs
     : leds{DigitalOut{LED1}, DigitalOut{LED2}, DigitalOut{LED3}, DigitalOut{LED4}}
-    , to_pc{USBTX, USBRX}
 {
-    to_pc.baud(TO_PC_BAUDRATE);
 }
 
 // Destructor
@@ -93,16 +81,6 @@ BaseController::~BaseController()
 {
 }
 /* }}} */
-
-void
-BaseController::write_to_pc(const std::string& msg) {
-    to_pc.printf("%s\r\n", msg.c_str());
-}
-
-Serial&
-BaseController::pc() {
-    return to_pc;
-}
 
 void
 BaseController::led_output(const std::bitset<NUM_LEDS>& output) {
