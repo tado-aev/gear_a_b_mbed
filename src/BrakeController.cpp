@@ -149,7 +149,7 @@ BrakeController::set(const double percentage) {
     writeline("A.1=", DEFAULT_A);
     writeline("M.1=", DEFAULT_M);
     writeline("^.1");
-    readline("Ux.1=%d", response_code);
+    //readline("Ux.1=%d", response_code);
 }
 
 void

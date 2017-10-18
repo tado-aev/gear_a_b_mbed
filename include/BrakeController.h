@@ -31,7 +31,7 @@ public:
     // Default acceleration for Cool Muscle
     static const int DEFAULT_A = 10;
     // Default torque for Cool Muscle
-    static const int DEFAULT_M = 20;
+    static const int DEFAULT_M = 120;
 
     // See the comment in BrakeController::init
     static const int brake_slack_pulse_front = 0;
