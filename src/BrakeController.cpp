@@ -137,7 +137,8 @@ void
 BrakeController::set(const double percentage) {
     int response_code = get_status();
 
-    if (response_code == RESPONSE_MOTOR_OFF) {
+    if (response_code == RESPONSE_MOTOR_OFF
+        || response_code == RESPONSE_TORQUE_LIMIT) {
         on();
     }
 
