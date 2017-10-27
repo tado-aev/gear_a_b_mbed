@@ -123,6 +123,7 @@ void
 GearController::set_r() {
     com_mutex.lock();
     shift_r = 1;
+    wait_ms(signal_overlap_ms);
     shift_n = 0;
     shift_d = 0;
     com_mutex.unlock();
@@ -133,8 +134,9 @@ GearController::set_r() {
 void
 GearController::set_n() {
     com_mutex.lock();
-    shift_r = 0;
     shift_n = 1;
+    wait_ms(signal_overlap_ms);
+    shift_r = 0;
     shift_d = 0;
     com_mutex.unlock();
 
@@ -144,9 +146,10 @@ GearController::set_n() {
 void
 GearController::set_d() {
     com_mutex.lock();
+    shift_d = 1;
+    wait_ms(signal_overlap_ms);
     shift_r = 0;
     shift_n = 0;
-    shift_d = 1;
     com_mutex.unlock();
 
     current_gear = Gear::DRIVE;
