@@ -5,13 +5,7 @@
 
 #include "GabController.h"
 
-static constexpr double BRAKE_FOLLOWER_RATE = 20;
-// Offset from the potentiometer to the actual brake percentage
-static constexpr double BRAKE_FOLLOWER_OFFSET = -35;
-
-bool is_g_a_turned_on = false;
-
-bool program_mode = false;
+static const unsigned COOL_MUSCLE_BAUDRATE = 38400;
 
 GabController controller;
 
@@ -19,40 +13,25 @@ ros::NodeHandle nh;
 
 void
 turn_on() {
-    nh.loginfo("Turning gearr, accelerator, and brake ON");
+    nh.loginfo("Turning gear, accelerator, and brake ON");
 
     controller.gear().on();
     controller.accel().on();
-    controller.brake().on();
+    // Turned on because of the brake follower
+    // controller.brake().on();
 }
 
 void
 turn_off() {
     controller.gear().off();
     controller.accel().off();
-    controller.brake().off();
-}
-
-void
-brake_follower() {
-    controller.brake().on();
-
-    while (nh.connected()) {
-        wait_ms(1000.0 / BRAKE_FOLLOWER_RATE);
-
-        auto potentiometer = controller.brake().get_percentage_potentiometer();
-        controller.brake().set(potentiometer + BRAKE_FOLLOWER_OFFSET);
-    }
-
-    controller.brake().off();
+    // Never turned off because brake follower is used
+    // BrakeController::end_brake_follower handles it
+    // controller.brake().off();
 }
 
 void
 callback(const coms_msgs::ComsGAB& msg) {
-    if (!program_mode) {
-        return;
-    }
-
     controller.gear().set(msg.gear);
     controller.accel().set(msg.accel);
     controller.brake().set(msg.brake);
@@ -64,6 +43,7 @@ run_node() {
     coms_msgs::ComsStatus status_msg;
     auto status_pub = ros::Publisher{"coms_status", &status_msg};
 
+    // Blocked here until ros_serial connects to the mbed (via roslaunch)
     nh.initNode();
     nh.subscribe(command_sub);
     nh.advertise(status_pub);
@@ -75,15 +55,11 @@ run_node() {
 
     //// Get parameters
     nh.loginfo("Getting parameters");
-    bool use_brake_follower;
-    int use_brake_follower_int;
     int cool_muscle_baudrate;
     int signal_overlap_ms;
     float ecu_voltage_a[2];
     float ecu_voltage_b[2];
     float status_rate;
-    nh.getParam("~use_brake_follower", &use_brake_follower_int);
-    use_brake_follower = use_brake_follower_int == 1;
     nh.getParam("~cool_muscle_baudrate", &cool_muscle_baudrate);
     nh.getParam("~signal_overlap_ms", &signal_overlap_ms);
     nh.getParam("~ecu_voltage_a", ecu_voltage_a, 2);
@@ -100,16 +76,10 @@ run_node() {
     nh.loginfo("Starting init");
     controller.gear().init();
     controller.accel().init();
-    controller.brake().init();
+    // Already enabled for the brake follower
+    // controller.brake().init();
 
-    if (use_brake_follower) {
-        program_mode = false;
-        // Blocks
-        brake_follower();
-        return;
-    }
-
-    program_mode = true;
+    controller.brake().set_brake_follower(false);
 
     turn_on();
 
@@ -132,14 +102,26 @@ run_node() {
 
     controller.end_publishing();
 
+    // Turn everything off except for the brake
     turn_off();
+
+    controller.brake().set_brake_follower(true);
 }
 
 int
 main() {
+    // Start up the brake follower independent of ROS commands
+    controller.led_output(100);
+    wait_ms(1000);
+    controller.brake().set_cool_muscle_baudrate(COOL_MUSCLE_BAUDRATE);
+    controller.brake().init();
+    controller.brake().begin_brake_follower();
+
     while (true) {
         run_node();
     }
+
+    controller.brake().end_brake_follower();
 
     return 0;
 }
