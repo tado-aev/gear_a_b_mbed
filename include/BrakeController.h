@@ -37,7 +37,7 @@ public:
     static const int brake_slack_pulse_front = 0;
     static const int brake_slack_pulse_back = -340;
 
-    static constexpr double BRAKE_FOLLOWER_RATE = 20;
+    static constexpr double BRAKE_FOLLOWER_RATE = 10;
     // Offset from the potentiometer to the actual brake percentage
     static constexpr double BRAKE_FOLLOWER_OFFSET = -35;
 
