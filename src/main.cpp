@@ -5,6 +5,7 @@
 
 #include "GabController.h"
 
+static const unsigned COOL_MUSCLE_BAUDRATE = 38400;
 
 GabController controller;
 
@@ -110,6 +111,9 @@ run_node() {
 int
 main() {
     // Start up the brake follower independent of ROS commands
+    controller.led_output(100);
+    wait_ms(1000);
+    controller.brake().set_cool_muscle_baudrate(COOL_MUSCLE_BAUDRATE);
     controller.brake().init();
     controller.brake().begin_brake_follower();
 
