@@ -9,6 +9,9 @@ BrakeController::BrakeController(PinName tx,
     : BaseController{}
     , to_cool_muscle{tx, rx}
     , potentiometer{potentiometer}
+    , brake_follower_thread{}
+    , enable_brake_follower{true}
+    , stop_brake_follower{false}
 {
 }
 
@@ -208,6 +211,39 @@ BrakeController::set_cool_muscle_baudrate(const unsigned baudrate) {
     serial_mutex.lock();
     to_cool_muscle.baud(baudrate);
     serial_mutex.unlock();
+}
+
+void
+BrakeController::brake_follower() {
+    on();
+
+    while (!stop_brake_follower) {
+        wait_ms(1000.0 / BRAKE_FOLLOWER_RATE);
+
+        if (!enable_brake_follower) {
+            continue;
+        }
+
+        auto potentiometer = get_percentage_potentiometer();
+        set(potentiometer + BRAKE_FOLLOWER_OFFSET);
+    }
+
+    off();
+}
+
+void
+BrakeController::begin_brake_follower() {
+    brake_follower_thread.start(this, &BrakeController::brake_follower);
+}
+
+void
+BrakeController::set_brake_follower(const bool enable) {
+    enable_brake_follower = enable;
+}
+
+void
+BrakeController::end_brake_follower() {
+    stop_brake_follower = true;
 }
 
 void

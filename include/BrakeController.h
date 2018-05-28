@@ -37,6 +37,10 @@ public:
     static const int brake_slack_pulse_front = 0;
     static const int brake_slack_pulse_back = -340;
 
+    static constexpr double BRAKE_FOLLOWER_RATE = 20;
+    // Offset from the potentiometer to the actual brake percentage
+    static constexpr double BRAKE_FOLLOWER_OFFSET = -35;
+
     /* Constructors, Destructor, and Assignment operators {{{ */
     BrakeController(PinName tx, PinName rx, PinName potentiometer);
 
@@ -131,6 +135,42 @@ public:
     void
     set_cool_muscle_baudrate(const unsigned baudrate);
 
+    /**
+     * Loop that reads the value from the potentiometer and moves the brake
+     * actuator so that it follows the movement of the brake pedal.
+     */
+    void
+    brake_follower();
+
+    /**
+     * Spins up the thread for the brake follower
+     *
+     * BrakeController::brake_follower enables the actuator torque (i.e. calls
+     * BrakeController::on) so there is no need to on() before calling this
+     * method. However, it is the required that the init() method be called
+     * before calling this method.
+     */
+    void
+    begin_brake_follower();
+
+    /**
+     * Changes the status of the brake follower
+     *
+     * \param[in] enable true to enable brake follower, false otherwise
+     */
+    void
+    set_brake_follower(const bool enable);
+
+    /**
+     * Sets the flag to end the brake follower
+     *
+     * BrakeController::brake_follower disables the actuator torque (i.e.
+     * calls BrakeController::off) so there is no need to off() after calling
+     * this method.
+     */
+    void
+    end_brake_follower();
+
 private:
     Mutex serial_mutex;
     Mutex potentiometer_mutex;
@@ -153,6 +193,10 @@ private:
     double min_potentiometer;
     // Value from the potentiometer at 100% brake
     double max_potentiometer;
+
+    Thread brake_follower_thread;
+    bool enable_brake_follower;
+    bool stop_brake_follower;
 
     /**
      * Writes a line to the Cool Muscle actuator after adding a CRLF
