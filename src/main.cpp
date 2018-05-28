@@ -5,9 +5,6 @@
 
 #include "GabController.h"
 
-bool is_g_a_turned_on = false;
-
-bool program_mode = false;
 
 GabController controller;
 
@@ -34,10 +31,6 @@ turn_off() {
 
 void
 callback(const coms_msgs::ComsGAB& msg) {
-    if (!program_mode) {
-        return;
-    }
-
     controller.gear().set(msg.gear);
     controller.accel().set(msg.accel);
     controller.brake().set(msg.brake);
@@ -85,7 +78,6 @@ run_node() {
     // Already enabled for the brake follower
     // controller.brake().init();
 
-    program_mode = true;
     controller.brake().set_brake_follower(false);
 
     turn_on();
