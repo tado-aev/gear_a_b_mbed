@@ -19,7 +19,7 @@ ros::NodeHandle nh;
 
 void
 turn_on() {
-    nh.loginfo("Turning gearr, accelerator, and brake ON");
+    nh.loginfo("Turning gear, accelerator, and brake ON");
 
     controller.gear().on();
     controller.accel().on();
